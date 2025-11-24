@@ -170,7 +170,7 @@ export const Payment = () => {
             return;
         }
 
-        // All validations passed - save payment info to database
+        // All validations passed - save payment info
         if (currentUser) {
             const newPayment: PaymentInfo = {
                 id: `pay_${Date.now()}`,
@@ -184,33 +184,11 @@ export const Payment = () => {
                 status: 'Success'
             };
 
-            try {
-                // Save to database via API
-                const response = await fetch('http://localhost:3001/api/payments', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(newPayment),
-                });
+            // Save to local state for UI display
+            const updatedMethods = paymentMethods.filter(pay => pay.patientId !== currentUser.id);
+            setPaymentMethods([...updatedMethods, newPayment]);
 
-                if (!response.ok) {
-                    throw new Error('Failed to save payment');
-                }
-
-                // Also save to local state for immediate UI update
-                const updatedMethods = paymentMethods.filter(pay => pay.patientId !== currentUser.id);
-                setPaymentMethods([...updatedMethods, newPayment]);
-
-                setSubmissionStatus('success');
-            } catch (error) {
-                console.error('Error saving payment:', error);
-                setSubmissionStatus('error');
-                setErrors({
-                    ...errors,
-                    cardNumber: 'Failed to save payment. Please try again.'
-                });
-            }
+            setSubmissionStatus('success');
         }
     };
 
@@ -437,7 +415,7 @@ export const Payment = () => {
 
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-gray-700">
-                        <span className="font-semibold">Note:</span> Payment details are securely saved to the database. Only last 4 digits of card are stored for security.
+                        <span className="font-semibold">Note:</span> Payment card validation demo. Only last 4 digits are displayed for security.
                     </p>
                 </div>
 

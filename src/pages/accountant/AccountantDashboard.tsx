@@ -31,15 +31,68 @@ export const AccountantDashboard = () => {
     const fetchPayments = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:3001/api/payments');
-            const data = await response.json();
 
-            if (response.ok) {
-                setPayments(data.payments);
-                calculateStats(data.payments);
-            } else {
-                setError('Failed to fetch payments');
-            }
+            // Demo data for UI display
+            const demoPayments: PaymentInfo[] = [
+                {
+                    id: 'payment_1',
+                    patientId: 'user_1',
+                    cardNumber: '****3456',
+                    cardHolderName: 'John Doe',
+                    expiryDate: '12/25',
+                    cvv: '',
+                    amount: 150.00,
+                    paymentDate: '2024-11-20',
+                    status: 'Success'
+                },
+                {
+                    id: 'payment_2',
+                    patientId: 'user_2',
+                    cardNumber: '****7890',
+                    cardHolderName: 'Jane Smith',
+                    expiryDate: '01/26',
+                    cvv: '',
+                    amount: 200.00,
+                    paymentDate: '2024-11-21',
+                    status: 'Success'
+                },
+                {
+                    id: 'payment_3',
+                    patientId: 'user_3',
+                    cardNumber: '****1234',
+                    cardHolderName: 'Mike Johnson',
+                    expiryDate: '03/25',
+                    cvv: '',
+                    amount: 75.50,
+                    paymentDate: '2024-11-22',
+                    status: 'Failed'
+                },
+                {
+                    id: 'payment_4',
+                    patientId: 'user_4',
+                    cardNumber: '****5678',
+                    cardHolderName: 'Sarah Williams',
+                    expiryDate: '06/26',
+                    cvv: '',
+                    amount: 300.00,
+                    paymentDate: '2024-11-23',
+                    status: 'Success'
+                },
+                {
+                    id: 'payment_5',
+                    patientId: 'user_5',
+                    cardNumber: '****9012',
+                    cardHolderName: 'David Brown',
+                    expiryDate: '09/25',
+                    cvv: '',
+                    amount: 125.00,
+                    paymentDate: '2024-11-24',
+                    status: 'Success'
+                }
+            ];
+
+            setPayments(demoPayments);
+            calculateStats(demoPayments);
         } catch (err) {
             setError('Error loading payment data');
             console.error('Error fetching payments:', err);

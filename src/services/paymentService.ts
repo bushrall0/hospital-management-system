@@ -65,21 +65,23 @@ export async function createPayment(payment: Omit<PaymentInfo, 'id'>): Promise<P
         const sql = `
             INSERT INTO Payments (
                 payment_id, patient_id, amount, payment_method,
-                payment_status, transaction_id, payment_date, created_at, notes
+                payment_status, transaction_id, payment_date, created_at
             )
             VALUES (
                 payment_seq.NEXTVAL, :patientId, :amount, 'Card',
-                :status, :transactionId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :notes
+                :status, :transactionId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
             RETURNING payment_id INTO :id
         `;
+
+        // Store card info in transaction_id for simplicity
+        const transactionId = `TXN_${Date.now()}_****${last4Digits}_${payment.cardHolderName.replace(/\s/g, '_')}_${payment.expiryDate.replace('/', '')}`;
 
         const binds = {
             patientId,
             amount: payment.amount,
             status: payment.status,
-            transactionId: `TXN_${Date.now()}`,
-            notes: `Card ending in ${last4Digits} | Holder: ${payment.cardHolderName} | Exp: ${payment.expiryDate}`,
+            transactionId,
             id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         };
 
