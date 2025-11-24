@@ -59,14 +59,17 @@ export async function createPayment(payment: Omit<PaymentInfo, 'id'>): Promise<P
     try {
         const patientId = parseInt(payment.patientId.replace('user_', ''));
 
+        // Extract last 4 digits for security
+        const last4Digits = payment.cardNumber.replace(/\s/g, '').slice(-4);
+
         const sql = `
             INSERT INTO Payments (
                 payment_id, patient_id, amount, payment_method,
-                payment_status, transaction_id, payment_date, created_at
+                payment_status, transaction_id, payment_date, created_at, notes
             )
             VALUES (
                 payment_seq.NEXTVAL, :patientId, :amount, 'Card',
-                :status, :transactionId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                :status, :transactionId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :notes
             )
             RETURNING payment_id INTO :id
         `;
@@ -76,6 +79,7 @@ export async function createPayment(payment: Omit<PaymentInfo, 'id'>): Promise<P
             amount: payment.amount,
             status: payment.status,
             transactionId: `TXN_${Date.now()}`,
+            notes: `Card ending in ${last4Digits} | Holder: ${payment.cardHolderName} | Exp: ${payment.expiryDate}`,
             id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         };
 
