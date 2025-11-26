@@ -24,7 +24,7 @@ export const RegisterPage = () => {
         return regex.test(password);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSuccessMessage('');
@@ -38,7 +38,7 @@ export const RegisterPage = () => {
             setError('Passwords do not match.');
             return;
         }
-        
+
         if (!validatePassword(formData.password)) {
             setError('Password must be at least 8 characters and include an uppercase letter, a number, and a special character.');
             return;
@@ -59,12 +59,38 @@ export const RegisterPage = () => {
             contactNumber: formData.contactNumber,
         };
 
-        setPatients(prev => [...prev, newPatient]);
-        setSuccessMessage('Your account has been created successfully!');
+        try {
+            // Save to database via API
+            const response = await fetch('http://localhost:3001/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    fullName: formData.fullName,
+                    email: formData.email,
+                    password: formData.password,
+                    dateOfBirth: formData.dateOfBirth,
+                    contactNumber: formData.contactNumber,
+                }),
+            });
 
-        setTimeout(() => {
-            navigate(Page.Login);
-        }, 2000);
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Registration failed');
+            }
+
+            // Also save to local state for immediate UI update
+            setPatients(prev => [...prev, newPatient]);
+            setSuccessMessage('Your account has been created successfully!');
+
+            setTimeout(() => {
+                navigate(Page.Login);
+            }, 2000);
+        } catch (err: any) {
+            console.error('Registration error:', err);
+            setError(err.message || 'Failed to create account. Please try again.');
+        }
     };
     
     const today = new Date().toISOString().split('T')[0];
