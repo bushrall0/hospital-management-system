@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 import { LogoutIcon } from '../../components/icons';
 
@@ -19,95 +19,114 @@ interface Message {
     timestamp: string;
 }
 
+const sampleMessages = [
+    'I need help with my appointment',
+    'Can you help me with my medical records?',
+    'I have a question about my insurance',
+    'When are my lab results ready?',
+    'I need to reschedule my appointment',
+    'How can I access my prescriptions?'
+];
+
 export const CustomerServiceDashboard = () => {
-    const { currentUser, logout } = useAppContext();
+    const { currentUser, logout, patients } = useAppContext();
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
     const [replyMessage, setReplyMessage] = useState('');
+    const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
 
-    // Mock chat sessions (UI only)
-    const [chatSessions, setChatSessions] = useState<ChatSession[]>([
-        {
-            id: 'chat_1',
-            patientName: 'John Doe',
-            patientId: 'user_1',
-            lastMessage: 'I need help with my appointment',
-            timestamp: '10:30 AM',
-            unreadCount: 2,
-            status: 'active'
-        },
-        {
-            id: 'chat_2',
-            patientName: 'Jane Smith',
-            patientId: 'user_2',
-            lastMessage: 'Thank you for your help!',
-            timestamp: '9:45 AM',
-            unreadCount: 0,
-            status: 'resolved'
-        },
-        {
-            id: 'chat_3',
-            patientName: 'Mike Johnson',
-            patientId: 'user_3',
-            lastMessage: 'When are my lab results ready?',
-            timestamp: '9:15 AM',
-            unreadCount: 1,
-            status: 'active'
+    // Generate chat sessions from real patient data
+    useEffect(() => {
+        if (patients.length > 0) {
+            const sessions: ChatSession[] = patients.slice(0, 10).map((patient, index) => {
+                const randomMessage = sampleMessages[index % sampleMessages.length];
+                const randomHour = 9 + Math.floor(Math.random() * 4);
+                const randomMinute = Math.floor(Math.random() * 60);
+                const timestamp = `${randomHour}:${randomMinute.toString().padStart(2, '0')} AM`;
+                const isActive = index % 3 !== 2; // Most chats active, some resolved
+
+                return {
+                    id: `chat_${patient.id}`,
+                    patientName: patient.fullName,
+                    patientId: patient.id,
+                    lastMessage: randomMessage,
+                    timestamp,
+                    unreadCount: isActive ? Math.floor(Math.random() * 3) : 0,
+                    status: isActive ? 'active' : 'resolved'
+                };
+            });
+            setChatSessions(sessions);
         }
-    ]);
+    }, [patients]);
 
-    // Mock messages for selected chat (UI only)
-    const [messages] = useState<Record<string, Message[]>>({
-        chat_1: [
-            {
-                id: 'msg_1',
-                sender: 'patient',
-                text: 'I need help with my appointment',
-                timestamp: '10:30 AM'
-            },
-            {
-                id: 'msg_2',
-                sender: 'patient',
-                text: 'Can I reschedule it to next week?',
-                timestamp: '10:31 AM'
-            }
-        ],
-        chat_2: [
-            {
-                id: 'msg_3',
-                sender: 'patient',
-                text: 'I have a question about my bill',
-                timestamp: '9:40 AM'
-            },
-            {
-                id: 'msg_4',
-                sender: 'service',
-                text: 'I can help you with that. Let me check your account.',
-                timestamp: '9:42 AM'
-            },
-            {
-                id: 'msg_5',
-                sender: 'patient',
-                text: 'Thank you for your help!',
-                timestamp: '9:45 AM'
-            }
-        ],
-        chat_3: [
-            {
-                id: 'msg_6',
-                sender: 'patient',
-                text: 'When are my lab results ready?',
-                timestamp: '9:15 AM'
-            }
-        ]
-    });
+    // Generate messages for each chat session dynamically
+    const [messages, setMessages] = useState<Record<string, Message[]>>({});
+
+    useEffect(() => {
+        if (chatSessions.length > 0) {
+            const generatedMessages: Record<string, Message[]> = {};
+
+            chatSessions.forEach((session) => {
+                const chatMessages: Message[] = [
+                    {
+                        id: `msg_${session.id}_1`,
+                        sender: 'patient',
+                        text: session.lastMessage,
+                        timestamp: session.timestamp
+                    }
+                ];
+
+                // Add follow-up messages for some chats
+                if (session.status === 'resolved') {
+                    chatMessages.push({
+                        id: `msg_${session.id}_2`,
+                        sender: 'service',
+                        text: 'I can help you with that. Let me check your account.',
+                        timestamp: session.timestamp
+                    });
+                    chatMessages.push({
+                        id: `msg_${session.id}_3`,
+                        sender: 'patient',
+                        text: 'Thank you for your help!',
+                        timestamp: session.timestamp
+                    });
+                } else if (session.unreadCount > 1) {
+                    chatMessages.push({
+                        id: `msg_${session.id}_2`,
+                        sender: 'patient',
+                        text: 'Can someone please assist me?',
+                        timestamp: session.timestamp
+                    });
+                }
+
+                generatedMessages[session.id] = chatMessages;
+            });
+
+            setMessages(generatedMessages);
+        }
+    }, [chatSessions]);
 
     const handleSendReply = (e: React.FormEvent) => {
         e.preventDefault();
         if (replyMessage.trim() && activeChatId) {
-            // UI only - just clear the input
+            // Add message to the chat
+            const newMessage: Message = {
+                id: `msg_${Date.now()}`,
+                sender: 'service',
+                text: replyMessage,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            setMessages(prev => ({
+                ...prev,
+                [activeChatId]: [...(prev[activeChatId] || []), newMessage]
+            }));
+
+            // Clear unread count for this chat
+            setChatSessions(chatSessions.map(chat =>
+                chat.id === activeChatId ? { ...chat, unreadCount: 0 } : chat
+            ));
+
             setReplyMessage('');
-            // Show success message briefly
-            alert('Message sent successfully!');
         }
     };
 
@@ -146,48 +165,73 @@ export const CustomerServiceDashboard = () => {
             </header>
 
             <main className="container mx-auto p-4 sm:p-6 lg:p-8">
+                {/* Info Banner */}
+                <div className="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    <div className="flex items-start">
+                        <svg className="w-6 h-6 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h3 className="text-blue-800 font-semibold mb-1">Real Patient Data Connected</h3>
+                            <p className="text-blue-700 text-sm">
+                                Showing chat sessions with registered patients from the database. Messages are UI-only for demonstration.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-3 h-[700px]">
                         {/* Chat Sessions List */}
                         <div className="md:col-span-1 border-r border-gray-200 overflow-y-auto">
                             <div className="p-4 bg-primary-dark text-white">
-                                <h2 className="text-lg font-semibold">Active Chats</h2>
+                                <h2 className="text-lg font-semibold">Patient Chats</h2>
                                 <p className="text-sm text-gray-200">
                                     {chatSessions.filter(c => c.status === 'active').length} active conversations
                                 </p>
                             </div>
                             <div className="divide-y divide-gray-200">
-                                {chatSessions.map((chat) => (
-                                    <div
-                                        key={chat.id}
-                                        onClick={() => setActiveChatId(chat.id)}
-                                        className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                            activeChatId === chat.id ? 'bg-primary-light' : ''
-                                        }`}
-                                    >
-                                        <div className="flex justify-between items-start mb-1">
-                                            <h3 className="font-semibold text-gray-800">{chat.patientName}</h3>
-                                            {chat.unreadCount > 0 && (
-                                                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                                                    {chat.unreadCount}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
-                                        <div className="flex justify-between items-center mt-2">
-                                            <span className="text-xs text-gray-500">{chat.timestamp}</span>
-                                            <span
-                                                className={`text-xs px-2 py-1 rounded ${
-                                                    chat.status === 'active'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-gray-100 text-gray-600'
-                                                }`}
-                                            >
-                                                {chat.status}
-                                            </span>
-                                        </div>
+                                {chatSessions.length === 0 ? (
+                                    <div className="p-8 text-center text-gray-500">
+                                        <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        <p>No patient chats available</p>
+                                        <p className="text-xs mt-1">Patients will appear here once they register</p>
                                     </div>
-                                ))}
+                                ) : (
+                                    chatSessions.map((chat) => (
+                                        <div
+                                            key={chat.id}
+                                            onClick={() => setActiveChatId(chat.id)}
+                                            className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                                activeChatId === chat.id ? 'bg-primary-light' : ''
+                                            }`}
+                                        >
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h3 className="font-semibold text-gray-800">{chat.patientName}</h3>
+                                                {chat.unreadCount > 0 && (
+                                                    <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                                                        {chat.unreadCount}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
+                                            <div className="flex justify-between items-center mt-2">
+                                                <span className="text-xs text-gray-500">{chat.timestamp}</span>
+                                                <span
+                                                    className={`text-xs px-2 py-1 rounded ${
+                                                        chat.status === 'active'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-gray-100 text-gray-600'
+                                                    }`}
+                                                >
+                                                    {chat.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
 
