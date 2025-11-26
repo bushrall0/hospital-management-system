@@ -214,7 +214,32 @@ export const AccountantDashboard = () => {
 
                         {/* Payment Transactions Table */}
                         <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-6">Payment Transactions</h2>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800">Payment Transactions</h2>
+                                <button
+                                    onClick={() => {
+                                        // Generate CSV report
+                                        const csvContent = [
+                                            ['Transaction ID', 'Patient ID', 'Amount', 'Date', 'Status'],
+                                            ...payments.map(p => [p.id, p.patientId, `$${p.amount.toFixed(2)}`, p.paymentDate, p.status])
+                                        ].map(row => row.join(',')).join('\n');
+
+                                        const blob = new Blob([csvContent], { type: 'text/csv' });
+                                        const url = window.URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `billing-report-${new Date().toISOString().split('T')[0]}.csv`;
+                                        a.click();
+                                        window.URL.revokeObjectURL(url);
+                                    }}
+                                    className="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-300"
+                                >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Export Report (CSV)
+                                </button>
+                            </div>
 
                             {payments.length === 0 ? (
                                 <p className="text-center text-gray-500 py-8">No payment transactions found.</p>
