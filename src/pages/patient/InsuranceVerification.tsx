@@ -92,12 +92,29 @@ export const InsuranceVerification = () => {
                 body: JSON.stringify({ provider: formData.provider })
             });
             const data = await response.json();
-            setInsuranceSupported(data.isSupported);
+            const isSupported = data.isSupported;
+            setInsuranceSupported(isSupported);
+
+            // Only save insurance if it's supported
+            if (!isSupported) {
+                setErrors(prev => ({
+                    ...prev,
+                    provider: `${formData.provider} is not supported. Please use a supported insurance provider.`
+                }));
+                setSubmissionStatus('error');
+                return;
+            }
         } catch (error) {
             console.error('Error checking insurance support:', error);
+            setErrors(prev => ({
+                ...prev,
+                provider: 'Unable to verify insurance. Please try again.'
+            }));
+            setSubmissionStatus('error');
+            return;
         }
 
-        // All validations passed - save insurance info
+        // Insurance is supported - save insurance info
         if (currentUser) {
             const newInsurance: InsuranceInfo = {
                 id: `ins_${Date.now()}`,
