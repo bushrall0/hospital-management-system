@@ -1,46 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAppContext } from '../../contexts/AppContext';
 
 interface Message {
     id: string;
     sender: 'patient' | 'service';
     text: string;
     timestamp: string;
+    patientId?: string;
 }
 
 export const CustomerServiceChat = () => {
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            sender: 'service',
-            text: 'Hello! How can I assist you today?',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-    ]);
+    const { currentUser } = useAppContext();
+    const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
+
+    // Load messages from localStorage on mount
+    useEffect(() => {
+        if (currentUser) {
+            const chatKey = `chat_${currentUser.id}`;
+            const savedMessages = localStorage.getItem(chatKey);
+            if (savedMessages) {
+                setMessages(JSON.parse(savedMessages));
+            } else {
+                // Initial welcome message
+                const welcomeMsg: Message = {
+                    id: '1',
+                    sender: 'service',
+                    text: 'Hello! How can I assist you today?',
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    patientId: currentUser.id
+                };
+                setMessages([welcomeMsg]);
+                localStorage.setItem(chatKey, JSON.stringify([welcomeMsg]));
+            }
+        }
+    }, [currentUser]);
+
+    // Poll for new messages from customer service every 2 seconds
+    useEffect(() => {
+        if (!currentUser) return;
+
+        const interval = setInterval(() => {
+            const chatKey = `chat_${currentUser.id}`;
+            const savedMessages = localStorage.getItem(chatKey);
+            if (savedMessages) {
+                const parsedMessages = JSON.parse(savedMessages);
+                setMessages(parsedMessages);
+            }
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [currentUser]);
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
-        if (newMessage.trim()) {
+        if (newMessage.trim() && currentUser) {
             // Add patient message
             const patientMsg: Message = {
                 id: `msg_${Date.now()}`,
                 sender: 'patient',
                 text: newMessage,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                patientId: currentUser.id
             };
-            setMessages([...messages, patientMsg]);
-            setNewMessage('');
 
-            // Simulate auto-response from customer service (UI only)
-            setTimeout(() => {
-                const autoReply: Message = {
-                    id: `msg_${Date.now() + 1}`,
-                    sender: 'service',
-                    text: 'Thank you for your message. A customer service representative will respond shortly.',
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                };
-                setMessages(prev => [...prev, autoReply]);
-            }, 1000);
+            const updatedMessages = [...messages, patientMsg];
+            setMessages(updatedMessages);
+
+            // Save to localStorage
+            const chatKey = `chat_${currentUser.id}`;
+            localStorage.setItem(chatKey, JSON.stringify(updatedMessages));
+
+            setNewMessage('');
         }
     };
 

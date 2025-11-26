@@ -58,56 +58,89 @@ export const CustomerServiceDashboard = () => {
         }
     }, [patients]);
 
-    // Generate messages for each chat session dynamically
+    // Load messages from localStorage for each patient
     const [messages, setMessages] = useState<Record<string, Message[]>>({});
 
     useEffect(() => {
         if (chatSessions.length > 0) {
-            const generatedMessages: Record<string, Message[]> = {};
+            const loadedMessages: Record<string, Message[]> = {};
 
             chatSessions.forEach((session) => {
-                const chatMessages: Message[] = [
-                    {
-                        id: `msg_${session.id}_1`,
-                        sender: 'patient',
-                        text: session.lastMessage,
-                        timestamp: session.timestamp
+                const chatKey = `chat_${session.patientId}`;
+                const savedMessages = localStorage.getItem(chatKey);
+
+                if (savedMessages) {
+                    // Load existing messages from localStorage
+                    loadedMessages[session.id] = JSON.parse(savedMessages);
+                } else {
+                    // Generate initial messages if none exist
+                    const chatMessages: Message[] = [
+                        {
+                            id: `msg_${session.id}_1`,
+                            sender: 'patient',
+                            text: session.lastMessage,
+                            timestamp: session.timestamp
+                        }
+                    ];
+
+                    // Add follow-up messages for some chats
+                    if (session.status === 'resolved') {
+                        chatMessages.push({
+                            id: `msg_${session.id}_2`,
+                            sender: 'service',
+                            text: 'I can help you with that. Let me check your account.',
+                            timestamp: session.timestamp
+                        });
+                        chatMessages.push({
+                            id: `msg_${session.id}_3`,
+                            sender: 'patient',
+                            text: 'Thank you for your help!',
+                            timestamp: session.timestamp
+                        });
+                    } else if (session.unreadCount > 1) {
+                        chatMessages.push({
+                            id: `msg_${session.id}_2`,
+                            sender: 'patient',
+                            text: 'Can someone please assist me?',
+                            timestamp: session.timestamp
+                        });
                     }
-                ];
 
-                // Add follow-up messages for some chats
-                if (session.status === 'resolved') {
-                    chatMessages.push({
-                        id: `msg_${session.id}_2`,
-                        sender: 'service',
-                        text: 'I can help you with that. Let me check your account.',
-                        timestamp: session.timestamp
-                    });
-                    chatMessages.push({
-                        id: `msg_${session.id}_3`,
-                        sender: 'patient',
-                        text: 'Thank you for your help!',
-                        timestamp: session.timestamp
-                    });
-                } else if (session.unreadCount > 1) {
-                    chatMessages.push({
-                        id: `msg_${session.id}_2`,
-                        sender: 'patient',
-                        text: 'Can someone please assist me?',
-                        timestamp: session.timestamp
-                    });
+                    loadedMessages[session.id] = chatMessages;
+                    // Save initial messages to localStorage
+                    localStorage.setItem(chatKey, JSON.stringify(chatMessages));
                 }
-
-                generatedMessages[session.id] = chatMessages;
             });
 
-            setMessages(generatedMessages);
+            setMessages(loadedMessages);
         }
+    }, [chatSessions]);
+
+    // Poll localStorage for updates every 2 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (chatSessions.length > 0) {
+                const refreshedMessages: Record<string, Message[]> = {};
+                chatSessions.forEach((session) => {
+                    const chatKey = `chat_${session.patientId}`;
+                    const savedMessages = localStorage.getItem(chatKey);
+                    if (savedMessages) {
+                        refreshedMessages[session.id] = JSON.parse(savedMessages);
+                    }
+                });
+                setMessages(refreshedMessages);
+            }
+        }, 2000);
+
+        return () => clearInterval(interval);
     }, [chatSessions]);
 
     const handleSendReply = (e: React.FormEvent) => {
         e.preventDefault();
         if (replyMessage.trim() && activeChatId) {
+            const activeSession = chatSessions.find(s => s.id === activeChatId);
+            if (!activeSession) return;
+
             // Add message to the chat
             const newMessage: Message = {
                 id: `msg_${Date.now()}`,
@@ -116,10 +149,16 @@ export const CustomerServiceDashboard = () => {
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
 
+            const updatedMessages = [...(messages[activeChatId] || []), newMessage];
+
             setMessages(prev => ({
                 ...prev,
-                [activeChatId]: [...(prev[activeChatId] || []), newMessage]
+                [activeChatId]: updatedMessages
             }));
+
+            // Save to localStorage so patient can see it
+            const chatKey = `chat_${activeSession.patientId}`;
+            localStorage.setItem(chatKey, JSON.stringify(updatedMessages));
 
             // Clear unread count for this chat
             setChatSessions(chatSessions.map(chat =>
