@@ -16,6 +16,7 @@ interface DbUser {
     PHONE_NUMBER: string | null;
     DATE_OF_BIRTH: Date | null;
     DEPARTMENT: string | null;
+    CONSULTATION_FEE: number | null;
     CREATED_AT: Date;
     IS_ACTIVE: string;
 }
@@ -35,7 +36,7 @@ export async function authenticateUser(email: string, password: string, role: Ro
         const sql = `
             SELECT user_id, full_name, email, password_hash as password, role,
                    phone_number as contact_number, date_of_birth, department,
-                   created_at, is_active
+                   consultation_fee, created_at, is_active
             FROM Users
             WHERE email = :email
               AND password_hash = :password
@@ -77,7 +78,8 @@ export async function authenticateUser(email: string, password: string, role: Ro
                 password: user.PASSWORD_HASH,
                 role: user.ROLE as Role.Admin | Role.Doctor | Role.LabTechnician | Role.Marketing | Role.Accountant | Role.CustomerService,
                 department: user.DEPARTMENT || '',
-                contactNumber: user.PHONE_NUMBER || ''
+                contactNumber: user.PHONE_NUMBER || '',
+                consultationFee: user.CONSULTATION_FEE || undefined
             } as Staff;
         }
     } catch (error) {
@@ -129,7 +131,7 @@ export async function getAllStaff(): Promise<Staff[]> {
     try {
         const sql = `
             SELECT user_id, full_name, email, password_hash as password, role,
-                   department, phone_number as contact_number
+                   department, phone_number as contact_number, consultation_fee
             FROM Users
             WHERE role IN ('Doctor', 'Lab Technician')
               AND is_active = '1'
@@ -149,7 +151,8 @@ export async function getAllStaff(): Promise<Staff[]> {
             password: user.PASSWORD_HASH,
             role: user.ROLE as Role.Doctor | Role.LabTechnician,
             department: user.DEPARTMENT || '',
-            contactNumber: user.PHONE_NUMBER || ''
+            contactNumber: user.PHONE_NUMBER || '',
+            consultationFee: user.CONSULTATION_FEE || undefined
         }));
     } catch (error) {
         console.error('Error fetching staff:', error);
@@ -164,9 +167,9 @@ export async function addStaff(staff: Omit<Staff, 'id'>): Promise<Staff> {
     try {
         const sql = `
             INSERT INTO Users (user_id, full_name, email, password_hash, role,
-                             department, phone_number, is_active, created_at)
+                             department, phone_number, consultation_fee, is_active, created_at)
             VALUES (user_seq.NEXTVAL, :fullName, :email, :password, :role,
-                   :department, :contactNumber, '1', CURRENT_TIMESTAMP)
+                   :department, :contactNumber, :consultationFee, '1', CURRENT_TIMESTAMP)
             RETURNING user_id INTO :id
         `;
 
@@ -177,6 +180,7 @@ export async function addStaff(staff: Omit<Staff, 'id'>): Promise<Staff> {
             role: staff.role,
             department: staff.department,
             contactNumber: staff.contactNumber,
+            consultationFee: staff.consultationFee || 0,
             id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
         };
 

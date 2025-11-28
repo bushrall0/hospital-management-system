@@ -8,7 +8,8 @@ export const Payment = () => {
         cardNumber: '',
         cardHolderName: '',
         expiryDate: '',
-        cvv: ''
+        cvv: '',
+        paymentMethod: 'Visa' as 'Visa' | 'Mada' | 'ApplePay'
     });
     const [errors, setErrors] = useState({
         cardNumber: '',
@@ -179,14 +180,14 @@ export const Payment = () => {
                 cardHolderName: formData.cardHolderName,
                 expiryDate: formData.expiryDate,
                 cvv: formData.cvv,
+                paymentMethod: formData.paymentMethod,
                 amount: 100, // Demo amount
                 paymentDate: new Date().toISOString(),
                 status: 'Success'
             };
 
-            // Save to local state for UI display
-            const updatedMethods = paymentMethods.filter(pay => pay.patientId !== currentUser.id);
-            setPaymentMethods([...updatedMethods, newPayment]);
+            // Save to local state for UI display - add to existing payment methods
+            setPaymentMethods([...paymentMethods, newPayment]);
 
             setSubmissionStatus('success');
         }
@@ -197,7 +198,8 @@ export const Payment = () => {
             cardNumber: '',
             cardHolderName: '',
             expiryDate: '',
-            cvv: ''
+            cvv: '',
+            paymentMethod: 'Visa'
         });
         setErrors({
             cardNumber: '',
@@ -225,6 +227,10 @@ export const Payment = () => {
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 text-left">
                         <h3 className="font-semibold text-gray-800 mb-3">Payment Details:</h3>
                         <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Payment Method:</span>
+                                <span className="font-medium text-gray-800">{formData.paymentMethod}</span>
+                            </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">Card Number:</span>
                                 <span className="font-medium text-gray-800">**** **** **** {formData.cardNumber.slice(-4)}</span>
@@ -403,12 +409,73 @@ export const Payment = () => {
                         </div>
                     </div>
 
+                    {/* Payment Method Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Payment Method *
+                        </label>
+                        <div className="grid grid-cols-3 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Visa' }))}
+                                className={`p-4 border-2 rounded-lg transition-all ${
+                                    formData.paymentMethod === 'Visa'
+                                        ? 'border-primary bg-primary-light shadow-md'
+                                        : 'border-gray-300 hover:border-primary'
+                                }`}
+                            >
+                                <div className="text-center">
+                                    <svg className="h-10 mx-auto mb-2" viewBox="0 0 48 32" fill="none">
+                                        <rect width="48" height="32" rx="4" fill="#1434CB"/>
+                                        <text x="24" y="20" fontSize="12" fill="white" textAnchor="middle" fontWeight="bold">VISA</text>
+                                    </svg>
+                                    <div className="text-sm font-medium">Visa</div>
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Mada' }))}
+                                className={`p-4 border-2 rounded-lg transition-all ${
+                                    formData.paymentMethod === 'Mada'
+                                        ? 'border-primary bg-primary-light shadow-md'
+                                        : 'border-gray-300 hover:border-primary'
+                                }`}
+                            >
+                                <div className="text-center">
+                                    <svg className="h-10 mx-auto mb-2" viewBox="0 0 48 32" fill="none">
+                                        <rect width="48" height="32" rx="4" fill="#00A651"/>
+                                        <text x="24" y="20" fontSize="10" fill="white" textAnchor="middle" fontWeight="bold">mada</text>
+                                    </svg>
+                                    <div className="text-sm font-medium">Mada</div>
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'ApplePay' }))}
+                                className={`p-4 border-2 rounded-lg transition-all ${
+                                    formData.paymentMethod === 'ApplePay'
+                                        ? 'border-primary bg-primary-light shadow-md'
+                                        : 'border-gray-300 hover:border-primary'
+                                }`}
+                            >
+                                <div className="text-center">
+                                    <svg className="h-10 mx-auto mb-2" viewBox="0 0 48 32" fill="none">
+                                        <rect width="48" height="32" rx="4" fill="#000000"/>
+                                        <path d="M14 16c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4zm8 0c0-1.1-.4-2.1-1.1-2.8.7-.7 1.8-1.2 2.8-1.2 2.2 0 4 1.8 4 4s-1.8 4-4 4c-1 0-2-.4-2.8-1.1.7-.8 1.1-1.8 1.1-2.9z" fill="white"/>
+                                        <text x="34" y="21" fontSize="7" fill="white" textAnchor="middle" fontWeight="500">Pay</text>
+                                    </svg>
+                                    <div className="text-sm font-medium">Apple Pay</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
                     <div className="pt-4">
                         <button
                             type="submit"
                             className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-300"
                         >
-                            Process Payment
+                            Save Payment Method
                         </button>
                     </div>
                 </form>
@@ -417,18 +484,6 @@ export const Payment = () => {
                     <p className="text-sm text-gray-700">
                         <span className="font-semibold">Note:</span> Payment card validation demo. Only last 4 digits are displayed for security.
                     </p>
-                </div>
-
-                <div className="mt-4 flex justify-center space-x-4">
-                    <svg className="h-8" viewBox="0 0 48 32" fill="none">
-                        <rect width="48" height="32" rx="4" fill="#1434CB"/>
-                        <text x="24" y="20" fontSize="12" fill="white" textAnchor="middle" fontWeight="bold">VISA</text>
-                    </svg>
-                    <svg className="h-8" viewBox="0 0 48 32" fill="none">
-                        <rect width="48" height="32" rx="4" fill="#EB001B"/>
-                        <circle cx="18" cy="16" r="10" fill="#FF5F00"/>
-                        <circle cx="30" cy="16" r="10" fill="#F79E1B"/>
-                    </svg>
                 </div>
                 </div>
             </div>

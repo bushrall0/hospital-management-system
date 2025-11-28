@@ -41,6 +41,7 @@ export interface Staff extends User {
     role: Role.Admin | Role.Doctor | Role.LabTechnician | Role.Marketing | Role.Accountant | Role.CustomerService;
     department: string;
     contactNumber: string;
+    consultationFee?: number;
 }
 
 export type CurrentUser = Patient | Staff | null;
@@ -55,6 +56,9 @@ export interface Appointment {
     date: string;
     time: string;
     status: 'Upcoming' | 'Completed' | 'Cancelled';
+    consultationFee?: number;
+    paymentMethod?: 'Visa' | 'Mada' | 'ApplePay';
+    paymentStatus?: 'Pending' | 'Completed' | 'Failed';
 }
 
 export interface MedicalRecord {
@@ -83,10 +87,14 @@ export interface InsuranceInfo {
 export interface PaymentInfo {
     id: string;
     patientId: string;
+    patientName?: string;
+    patientEmail?: string;
+    patientPhone?: string;
     cardNumber: string;
     cardHolderName: string;
     expiryDate: string;
     cvv: string;
+    paymentMethod?: 'Visa' | 'Mada' | 'ApplePay';
     amount: number;
     paymentDate: string;
     status: 'Success' | 'Failed';

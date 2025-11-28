@@ -17,17 +17,17 @@ INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number,
 VALUES (user_seq.NEXTVAL, 'System Administrator', 'bushramug9@gmail.com', '12345678Bb@', 'Admin', '0501234567', '1');
 
 -- Doctors
-INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, is_active)
-VALUES (user_seq.NEXTVAL, 'Dr. Ahmed Al-Rashid', 'ahmed.rashid@healsmart.com', 'doctor123', 'Doctor', '0501111111', 'Cardiology', 'Cardiologist', 'DOC-2020-001', TO_DATE('2020-01-15', 'YYYY-MM-DD'), '1');
+INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, consultation_fee, is_active)
+VALUES (user_seq.NEXTVAL, 'Dr. Ahmed Al-Rashid', 'ahmed.rashid@healsmart.com', 'doctor123', 'Doctor', '0501111111', 'Cardiology', 'Cardiologist', 'DOC-2020-001', TO_DATE('2020-01-15', 'YYYY-MM-DD'), 250.00, '1');
 
-INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, is_active)
-VALUES (user_seq.NEXTVAL, 'Dr. Fatima Hassan', 'fatima.hassan@healsmart.com', 'doctor123', 'Doctor', '0501111112', 'Pediatrics', 'Pediatrician', 'DOC-2019-002', TO_DATE('2019-06-01', 'YYYY-MM-DD'), '1');
+INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, consultation_fee, is_active)
+VALUES (user_seq.NEXTVAL, 'Dr. Fatima Hassan', 'fatima.hassan@healsmart.com', 'doctor123', 'Doctor', '0501111112', 'Pediatrics', 'Pediatrician', 'DOC-2019-002', TO_DATE('2019-06-01', 'YYYY-MM-DD'), 200.00, '1');
 
-INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, is_active)
-VALUES (user_seq.NEXTVAL, 'Dr. Mohammed Ali', 'mohammed.ali@healsmart.com', 'doctor123', 'Doctor', '0501111113', 'Orthopedics', 'Orthopedic Surgeon', 'DOC-2021-003', TO_DATE('2021-03-10', 'YYYY-MM-DD'), '1');
+INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, consultation_fee, is_active)
+VALUES (user_seq.NEXTVAL, 'Dr. Mohammed Ali', 'mohammed.ali@healsmart.com', 'doctor123', 'Doctor', '0501111113', 'Orthopedics', 'Orthopedic Surgeon', 'DOC-2021-003', TO_DATE('2021-03-10', 'YYYY-MM-DD'), 300.00, '1');
 
-INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, is_active)
-VALUES (user_seq.NEXTVAL, 'Dr. Noura Abdullah', 'noura.abdullah@healsmart.com', 'doctor123', 'Doctor', '0501111114', 'Dermatology', 'Dermatologist', 'DOC-2020-004', TO_DATE('2020-09-20', 'YYYY-MM-DD'), '1');
+INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, consultation_fee, is_active)
+VALUES (user_seq.NEXTVAL, 'Dr. Noura Abdullah', 'noura.abdullah@healsmart.com', 'doctor123', 'Doctor', '0501111114', 'Dermatology', 'Dermatologist', 'DOC-2020-004', TO_DATE('2020-09-20', 'YYYY-MM-DD'), 180.00, '1');
 
 -- Nurses
 INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, hire_date, is_active)

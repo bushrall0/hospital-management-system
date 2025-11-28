@@ -3,7 +3,7 @@
  * Handles all HTTP requests to the Express API server
  */
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 /**
  * Generic API request handler
@@ -161,6 +161,13 @@ export const insuranceAPI = {
     return apiRequest('/insurance', {
       method: 'POST',
       body: JSON.stringify(insurance),
+    });
+  },
+
+  checkSupported: async (companyName: string) => {
+    return apiRequest('/insurance/supported/check', {
+      method: 'POST',
+      body: JSON.stringify({ provider: companyName }),
     });
   },
 };

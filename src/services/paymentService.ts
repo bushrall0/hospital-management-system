@@ -10,10 +10,14 @@ import oracledb from 'oracledb';
 interface DbPayment {
     PAYMENT_ID: number;
     PATIENT_ID: number;
+    PATIENT_NAME: string;
+    PATIENT_EMAIL: string;
+    PATIENT_PHONE: string;
     AMOUNT: number;
     PAYMENT_STATUS: string;
     PAYMENT_DATE: Date;
     TRANSACTION_ID: string | null;
+    PAYMENT_METHOD: string | null;
 }
 
 /**
@@ -23,10 +27,12 @@ export async function getAllPayments(): Promise<PaymentInfo[]> {
     try {
         const sql = `
             SELECT
-                payment_id, patient_id, amount, payment_status,
-                payment_date, transaction_id
-            FROM Payments
-            ORDER BY payment_date DESC
+                p.payment_id, p.patient_id, p.amount, p.payment_status,
+                p.payment_date, p.transaction_id, p.payment_method,
+                u.full_name as patient_name, u.email as patient_email, u.phone_number as patient_phone
+            FROM Payments p
+            LEFT JOIN Users u ON p.patient_id = u.user_id
+            ORDER BY p.payment_date DESC
         `;
 
         const result = await executeQuery<DbPayment>(sql);
@@ -38,10 +44,14 @@ export async function getAllPayments(): Promise<PaymentInfo[]> {
         return result.rows.map(payment => ({
             id: `payment_${payment.PAYMENT_ID}`,
             patientId: `user_${payment.PATIENT_ID}`,
+            patientName: payment.PATIENT_NAME,
+            patientEmail: payment.PATIENT_EMAIL,
+            patientPhone: payment.PATIENT_PHONE,
             cardNumber: '', // Redacted for security
             cardHolderName: '',
             expiryDate: '',
             cvv: '',
+            paymentMethod: payment.PAYMENT_METHOD || 'Visa',
             amount: payment.AMOUNT,
             paymentDate: payment.PAYMENT_DATE.toISOString().split('T')[0],
             status: payment.PAYMENT_STATUS as 'Success' | 'Failed'
@@ -68,7 +78,7 @@ export async function createPayment(payment: Omit<PaymentInfo, 'id'>): Promise<P
                 payment_status, transaction_id, payment_date, created_at
             )
             VALUES (
-                payment_seq.NEXTVAL, :patientId, :amount, 'Card',
+                payment_seq.NEXTVAL, :patientId, :amount, :paymentMethod,
                 :status, :transactionId, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
             RETURNING payment_id INTO :id
@@ -80,6 +90,7 @@ export async function createPayment(payment: Omit<PaymentInfo, 'id'>): Promise<P
         const binds = {
             patientId,
             amount: payment.amount,
+            paymentMethod: payment.paymentMethod || 'Visa',
             status: payment.status,
             transactionId,
             id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
@@ -109,7 +120,7 @@ export async function getPaymentsByPatient(patientId: string): Promise<PaymentIn
         const sql = `
             SELECT
                 payment_id, patient_id, amount, payment_status,
-                payment_date, transaction_id
+                payment_date, transaction_id, payment_method
             FROM Payments
             WHERE patient_id = :id
             ORDER BY payment_date DESC
@@ -128,6 +139,7 @@ export async function getPaymentsByPatient(patientId: string): Promise<PaymentIn
             cardHolderName: '',
             expiryDate: '',
             cvv: '',
+            paymentMethod: payment.PAYMENT_METHOD || 'Visa',
             amount: payment.AMOUNT,
             paymentDate: payment.PAYMENT_DATE.toISOString().split('T')[0],
             status: payment.PAYMENT_STATUS as 'Success' | 'Failed'

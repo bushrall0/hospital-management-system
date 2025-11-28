@@ -59,16 +59,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 appointmentsResponse,
                 labTestsResponse,
                 medicalRecordsResponse,
-                insuranceResponse,
-                paymentsResponse
+                insuranceResponse
             ] = await Promise.all([
                 api.staff.getAll().catch(() => ({ staff: [] })),
                 api.patients.getAll().catch(() => ({ patients: [] })),
                 api.appointments.getAll().catch(() => ({ appointments: [] })),
                 api.labTests.getAll().catch(() => ({ labTests: [] })),
                 api.medicalRecords.getAll().catch(() => ({ records: [] })),
-                api.insurance.getAll().catch(() => ({ insurance: [] })),
-                api.payments.getAll().catch(() => ({ payments: [] }))
+                api.insurance.getAll().catch(() => ({ insurance: [] }))
             ]);
 
             setStaff(staffResponse.staff || []);
@@ -77,7 +75,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             setLabTests(labTestsResponse.labTests || []);
             setMedicalRecords(medicalRecordsResponse.records || []);
             setInsuranceRecords(insuranceResponse.insurance || []);
-            setPaymentMethods(paymentsResponse.payments || []);
+            // Don't load payment transactions into paymentMethods - only use for saved cards
         } catch (error) {
             console.error('Error fetching data:', error);
         }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 import { LogoutIcon } from '../../components/icons';
 import { PaymentInfo } from '../../types';
+import api from '../../api/client';
 
 interface PaymentStats {
     totalRevenue: number;
@@ -25,77 +26,22 @@ export const AccountantDashboard = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        fetchPayments();
+        fetchData();
     }, []);
 
-    const fetchPayments = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
 
-            // Demo data for UI display
-            const demoPayments: PaymentInfo[] = [
-                {
-                    id: 'payment_1',
-                    patientId: 'user_1',
-                    cardNumber: '****3456',
-                    cardHolderName: 'John Doe',
-                    expiryDate: '12/25',
-                    cvv: '',
-                    amount: 150.00,
-                    paymentDate: '2024-11-20',
-                    status: 'Success'
-                },
-                {
-                    id: 'payment_2',
-                    patientId: 'user_2',
-                    cardNumber: '****7890',
-                    cardHolderName: 'Jane Smith',
-                    expiryDate: '01/26',
-                    cvv: '',
-                    amount: 200.00,
-                    paymentDate: '2024-11-21',
-                    status: 'Success'
-                },
-                {
-                    id: 'payment_3',
-                    patientId: 'user_3',
-                    cardNumber: '****1234',
-                    cardHolderName: 'Mike Johnson',
-                    expiryDate: '03/25',
-                    cvv: '',
-                    amount: 75.50,
-                    paymentDate: '2024-11-22',
-                    status: 'Failed'
-                },
-                {
-                    id: 'payment_4',
-                    patientId: 'user_4',
-                    cardNumber: '****5678',
-                    cardHolderName: 'Sarah Williams',
-                    expiryDate: '06/26',
-                    cvv: '',
-                    amount: 300.00,
-                    paymentDate: '2024-11-23',
-                    status: 'Success'
-                },
-                {
-                    id: 'payment_5',
-                    patientId: 'user_5',
-                    cardNumber: '****9012',
-                    cardHolderName: 'David Brown',
-                    expiryDate: '09/25',
-                    cvv: '',
-                    amount: 125.00,
-                    paymentDate: '2024-11-24',
-                    status: 'Success'
-                }
-            ];
+            // Fetch real payments from API
+            const paymentsResponse = await api.payments.getAll();
+            const paymentsData = paymentsResponse.payments || [];
 
-            setPayments(demoPayments);
-            calculateStats(demoPayments);
+            setPayments(paymentsData);
+            calculateStats(paymentsData);
         } catch (err) {
-            setError('Error loading payment data');
-            console.error('Error fetching payments:', err);
+            setError('Error loading financial data');
+            console.error('Error fetching data:', err);
         } finally {
             setLoading(false);
         }
@@ -159,7 +105,7 @@ export const AccountantDashboard = () => {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-                                        <p className="text-2xl font-bold text-green-600">${stats.totalRevenue.toFixed(2)}</p>
+                                        <p className="text-2xl font-bold text-green-600">{stats.totalRevenue.toFixed(2)} SAR</p>
                                     </div>
                                     <div className="bg-green-100 p-3 rounded-full">
                                         <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +147,7 @@ export const AccountantDashboard = () => {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm text-gray-600 mb-1">Average Payment</p>
-                                        <p className="text-2xl font-bold text-purple-600">${stats.averagePayment.toFixed(2)}</p>
+                                        <p className="text-2xl font-bold text-purple-600">{stats.averagePayment.toFixed(2)} SAR</p>
                                     </div>
                                     <div className="bg-purple-100 p-3 rounded-full">
                                         <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,8 +166,8 @@ export const AccountantDashboard = () => {
                                     onClick={() => {
                                         // Generate CSV report
                                         const csvContent = [
-                                            ['Transaction ID', 'Patient ID', 'Amount', 'Date', 'Status'],
-                                            ...payments.map(p => [p.id, p.patientId, `$${p.amount.toFixed(2)}`, p.paymentDate, p.status])
+                                            ['Transaction ID', 'Patient ID', 'Patient Name', 'Email', 'Phone', 'Amount', 'Payment Method', 'Date', 'Status'],
+                                            ...payments.map(p => [p.id, p.patientId, p.patientName || 'N/A', p.patientEmail || 'N/A', p.patientPhone || 'N/A', `${p.amount.toFixed(2)} SAR`, p.paymentMethod || 'N/A', p.paymentDate, p.status])
                                         ].map(row => row.join(',')).join('\n');
 
                                         const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -252,10 +198,19 @@ export const AccountantDashboard = () => {
                                                     Transaction ID
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Patient ID
+                                                    Patient Name
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Email
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Phone
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Amount
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Payment Method
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Date
@@ -271,11 +226,20 @@ export const AccountantDashboard = () => {
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                         {payment.id}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {payment.patientId}
-                                                    </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                                        ${payment.amount.toFixed(2)}
+                                                        {payment.patientName || 'N/A'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {payment.patientEmail || 'N/A'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {payment.patientPhone || 'N/A'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                                                        {payment.amount.toFixed(2)} SAR
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {payment.paymentMethod || 'N/A'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         {payment.paymentDate}
@@ -310,7 +274,7 @@ export const AccountantDashboard = () => {
                                         {stats.totalTransactions > 0
                                             ? ((stats.successfulPayments / stats.totalTransactions) * 100).toFixed(1)
                                             : 0}%.
-                                        Total revenue generated: ${stats.totalRevenue.toFixed(2)}.
+                                        Total revenue generated: {stats.totalRevenue.toFixed(2)} SAR.
                                     </p>
                                 </div>
                             </div>

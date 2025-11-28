@@ -1,25 +1,12 @@
 
 import React from 'react';
 import { useAppContext } from '../../contexts/AppContext';
-import { TrashIcon } from '../../components/icons';
 import { Role } from '../../types';
-import api from '../../api/client';
 
 export const ViewStaff = () => {
-    const { staff, refreshData } = useAppContext();
+    const { staff } = useAppContext();
     // Show all staff members (excluding Admin) - sorted by role
     const allStaff = staff.filter(s => s.role !== Role.Admin).sort((a, b) => a.role.localeCompare(b.role));
-
-    const handleDelete = async (staffId: string) => {
-        try {
-            await api.staff.delete(staffId);
-            // Refresh data from database
-            await refreshData();
-        } catch (error) {
-            console.error('Error deleting staff:', error);
-            alert('Failed to delete staff member. Please try again.');
-        }
-    };
 
     const getRoleBadgeColor = (role: string) => {
         switch (role) {
@@ -44,7 +31,6 @@ export const ViewStaff = () => {
                             <th scope="col" className="px-6 py-3">Department</th>
                             <th scope="col" className="px-6 py-3">Email</th>
                             <th scope="col" className="px-6 py-3">Contact</th>
-                            <th scope="col" className="px-6 py-3">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -59,11 +45,6 @@ export const ViewStaff = () => {
                                 <td className="px-6 py-4">{staffMember.department}</td>
                                 <td className="px-6 py-4">{staffMember.email}</td>
                                 <td className="px-6 py-4">{staffMember.contactNumber}</td>
-                                <td className="px-6 py-4">
-                                    <button onClick={() => handleDelete(staffMember.id)} className="text-red-600 hover:text-red-900">
-                                        <TrashIcon />
-                                    </button>
-                                </td>
                             </tr>
                         ))}
                     </tbody>

@@ -180,6 +180,7 @@ CREATE TABLE Users (
   specialization  VARCHAR2(50),
   license_number  VARCHAR2(50),
   hire_date       DATE,
+  consultation_fee NUMBER(10,2) DEFAULT 0,
 
   CONSTRAINT email_format_check CHECK (REGEXP_LIKE(email, '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'))
 );
@@ -205,6 +206,9 @@ CREATE TABLE Appointments (
   department      VARCHAR2(50),
   reason          VARCHAR2(255),
   notes           CLOB,
+  consultation_fee NUMBER(10,2) DEFAULT 0,
+  payment_method  VARCHAR2(20) CHECK (payment_method IN ('Visa', 'Mada', 'ApplePay')),
+  payment_status  VARCHAR2(20) DEFAULT 'Pending' CHECK (payment_status IN ('Pending', 'Completed', 'Failed')),
   created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

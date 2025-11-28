@@ -15,9 +15,11 @@ export const BookAppointment = () => {
     const [isLoadingTimes, setIsLoadingTimes] = useState(false);
     const [message, setMessage] = useState('');
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'Visa' | 'Mada' | 'ApplePay'>('Visa');
     const [selectedPayment, setSelectedPayment] = useState('');
     const [selectedInsurance, setSelectedInsurance] = useState('');
     const [bookingSuccess, setBookingSuccess] = useState(false);
+    const [consultationFee, setConsultationFee] = useState(0);
 
     const doctors = useMemo(() => staff.filter(s => s.role === Role.Doctor), [staff]);
     
@@ -35,7 +37,18 @@ export const BookAppointment = () => {
         setSelectedDoctor('');
         setAvailableTimes([]);
         setSelectedTime('');
+        setConsultationFee(0);
     }, [selectedDept]);
+
+    // Update consultation fee when doctor is selected
+    useEffect(() => {
+        if (selectedDoctor) {
+            const doctor = staff.find(s => s.id === selectedDoctor);
+            if (doctor && 'consultationFee' in doctor) {
+                setConsultationFee(doctor.consultationFee || 100); // Default fee if not set
+            }
+        }
+    }, [selectedDoctor, staff]);
 
     useEffect(() => {
         if (selectedDoctor && appointmentDate) {
@@ -64,6 +77,11 @@ export const BookAppointment = () => {
     const userPayments = currentUser ? paymentMethods.filter(p => p.patientId === currentUser.id) : [];
     const userInsurance = currentUser ? insuranceRecords.filter(i => i.patientId === currentUser.id && i.isActive) : [];
 
+    // Calculate final amount with insurance discount (20% off ONLY if insurance is selected)
+    const selectedInsuranceInfo = selectedInsurance ? userInsurance.find(ins => ins.id === selectedInsurance) : null;
+    const insuranceDiscount = selectedInsuranceInfo ? consultationFee * 0.20 : 0;
+    const finalAmount = consultationFee - insuranceDiscount;
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setMessage('');
@@ -73,29 +91,26 @@ export const BookAppointment = () => {
             return;
         }
 
-        // Check if user has payment method
-        if (userPayments.length === 0) {
-            setMessage('Please add a payment method before booking an appointment.');
-            return;
-        }
-
         // Show payment/insurance selection modal
         setShowPaymentModal(true);
     };
 
     const handleConfirmBooking = async () => {
         if (!selectedPayment) {
-            setMessage('Please select a payment method.');
+            setMessage('Please select a payment card.');
             return;
         }
 
         const doctor = staff.find(s => s.id === selectedDoctor);
-        if (!doctor || !currentUser) {
+        const selectedPaymentInfo = userPayments.find(p => p.id === selectedPayment);
+
+        if (!doctor || !currentUser || !selectedPaymentInfo) {
             setMessage('An error occurred. Please try again.');
             return;
         }
 
         try {
+            // Create the appointment
             await api.appointments.create({
                 patientId: currentUser.id,
                 patientName: currentUser.fullName,
@@ -104,7 +119,22 @@ export const BookAppointment = () => {
                 department: doctor.department,
                 date: appointmentDate,
                 time: selectedTime,
-                status: 'Upcoming'
+                status: 'Upcoming',
+                consultationFee: consultationFee,
+                paymentMethod: selectedPaymentMethod,
+                paymentStatus: 'Completed'
+            });
+
+            // Create the payment record (with insurance discount applied if available)
+            await api.payments.create({
+                patientId: currentUser.id,
+                cardNumber: selectedPaymentInfo.cardNumber,
+                cardHolderName: selectedPaymentInfo.cardHolderName,
+                expiryDate: selectedPaymentInfo.expiryDate,
+                cvv: selectedPaymentInfo.cvv,
+                paymentMethod: selectedPaymentMethod,
+                amount: finalAmount,
+                status: 'Success'
             });
 
             // Refresh data from database
@@ -145,7 +175,7 @@ export const BookAppointment = () => {
                             <h3 className="font-semibold text-green-800">Payment Successful</h3>
                         </div>
                         <p className="text-sm text-green-700">
-                            Payment processed using card ending in {selectedPaymentInfo?.cardNumber.replace(/\s/g, '').slice(-4)}
+                            Payment of {consultationFee} SAR processed via {selectedPaymentInfo?.paymentMethod} (**** {selectedPaymentInfo?.cardNumber.replace(/\s/g, '').slice(-4)})
                         </p>
                     </div>
 
@@ -197,7 +227,9 @@ export const BookAppointment = () => {
                             setSelectedTime('');
                             setAvailableTimes([]);
                             setSelectedPayment('');
+                            setSelectedPaymentMethod('Visa');
                             setSelectedInsurance('');
+                            setConsultationFee(0);
                         }}
                         className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-4 rounded-lg transition duration-300"
                     >
@@ -290,14 +322,48 @@ export const BookAppointment = () => {
             {/* Payment & Insurance Selection Modal */}
             {showPaymentModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
                         <h3 className="text-2xl font-bold text-gray-800 mb-4">Payment & Insurance</h3>
-                        <p className="text-gray-600 mb-6">Select your payment method and insurance (if applicable) to complete booking.</p>
+                        <p className="text-gray-600 mb-6">Complete your booking by selecting a payment method.</p>
 
-                        {/* Payment Method Selection */}
+                        {/* Consultation Fee Display */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-gray-700 font-medium">Consultation Fee:</span>
+                                <span className={`text-lg font-semibold ${selectedInsuranceInfo ? 'line-through text-gray-500' : 'text-primary'}`}>
+                                    {consultationFee} SAR
+                                </span>
+                            </div>
+
+                            {selectedInsuranceInfo && (
+                                <>
+                                    <div className="flex justify-between items-center mb-2 text-green-600">
+                                        <span className="text-sm font-medium">
+                                            Insurance Discount (20%):
+                                        </span>
+                                        <span className="text-sm font-semibold">
+                                            - {insuranceDiscount.toFixed(2)} SAR
+                                        </span>
+                                    </div>
+                                    <div className="pt-2 border-t border-blue-300">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-800 font-bold">Total Amount:</span>
+                                            <span className="text-2xl font-bold text-green-600">{finalAmount.toFixed(2)} SAR</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 bg-green-50 border border-green-300 rounded p-2">
+                                        <p className="text-xs text-green-800">
+                                            ✓ Insurance: {selectedInsuranceInfo.provider} ({selectedInsuranceInfo.policyNumber})
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Saved Payment Cards Selection */}
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Payment Method *
+                                Select Payment Card *
                             </label>
                             <div className="space-y-2">
                                 {userPayments.map((payment) => (
@@ -314,12 +380,18 @@ export const BookAppointment = () => {
                                             name="payment"
                                             value={payment.id}
                                             checked={selectedPayment === payment.id}
-                                            onChange={(e) => setSelectedPayment(e.target.value)}
+                                            onChange={(e) => {
+                                                setSelectedPayment(e.target.value);
+                                                setSelectedPaymentMethod(payment.paymentMethod || 'Visa');
+                                            }}
                                             className="mr-3"
                                         />
                                         <div className="flex-1">
-                                            <div className="font-medium text-gray-800">
-                                                **** **** **** {payment.cardNumber.replace(/\s/g, '').slice(-4)}
+                                            <div className="flex items-center justify-between">
+                                                <div className="font-medium text-gray-800">
+                                                    {payment.paymentMethod || 'Card'} **** {payment.cardNumber.replace(/\s/g, '').slice(-4)}
+                                                </div>
+                                                <div className="text-xs text-gray-500">{payment.paymentMethod}</div>
                                             </div>
                                             <div className="text-sm text-gray-600">{payment.cardHolderName}</div>
                                         </div>
@@ -327,17 +399,18 @@ export const BookAppointment = () => {
                                 ))}
                             </div>
                             {userPayments.length === 0 && (
-                                <div className="text-sm text-red-600">
+                                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
                                     No payment methods found.{' '}
                                     <button
                                         onClick={() => navigate(Page.Payment)}
-                                        className="text-primary hover:underline"
+                                        className="text-primary hover:underline font-medium"
                                     >
                                         Add one now
                                     </button>
                                 </div>
                             )}
                         </div>
+
 
                         {/* Insurance Selection (Optional) */}
                         <div className="mb-6">
@@ -406,6 +479,7 @@ export const BookAppointment = () => {
                                 onClick={() => {
                                     setShowPaymentModal(false);
                                     setSelectedPayment('');
+                                    setSelectedPaymentMethod('Visa');
                                     setSelectedInsurance('');
                                 }}
                                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"

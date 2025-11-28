@@ -16,7 +16,7 @@ import insuranceService from '../src/services/insuranceService';
 import paymentService from '../src/services/paymentService';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -379,6 +379,21 @@ app.post('/api/insurance/check', async (req: Request, res: Response) => {
     try {
         const isSupported = await insuranceService.checkInsuranceSupport(req.body.provider);
         res.json({ isSupported });
+    } catch (error) {
+        console.error('Check insurance support error:', error);
+        res.status(500).json({ error: 'Failed to check insurance support' });
+    }
+});
+
+/**
+ * POST /api/insurance/supported/check
+ * Check if insurance provider is supported and get discount percentage
+ */
+app.post('/api/insurance/supported/check', async (req: Request, res: Response) => {
+    try {
+        const isSupported = await insuranceService.checkInsuranceSupport(req.body.provider);
+        // Default 20% discount for all supported insurance
+        res.json({ isSupported, discountPercentage: isSupported ? 20 : 0 });
     } catch (error) {
         console.error('Check insurance support error:', error);
         res.status(500).json({ error: 'Failed to check insurance support' });
