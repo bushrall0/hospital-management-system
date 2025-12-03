@@ -27,7 +27,6 @@ export const Header = () => {
                     { (currentPage === Page.Home || currentPage === Page.Login || currentPage === Page.Register) && (
                         <nav className="hidden md:flex md:space-x-8">
                             <NavLink page={Page.Home}>Home</NavLink>
-                            <NavLink page={Page.Login}>Login</NavLink>
                             <a href="#about" className="text-gray-600 hover:text-primary-dark transition-colors duration-300">About</a>
                             <a href="#contact" className="text-gray-600 hover:text-primary-dark transition-colors duration-300">Contact</a>
                         </nav>

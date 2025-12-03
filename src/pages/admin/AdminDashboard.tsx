@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 import { ViewStaff } from './ViewStaff';
 import { InsuranceManagement } from './InsuranceManagement';
-import { HomeIcon, UsersIcon, LogoutIcon, CalendarIcon } from '../../components/icons';
+import { HomeIcon, UsersIcon, LogoutIcon } from '../../components/icons';
 
-type AdminView = 'dashboard' | 'viewStaff' | 'manageAppointments' | 'insuranceManagement';
+type AdminView = 'dashboard' | 'viewStaff' | 'insuranceManagement';
 
 const SidebarLink = ({ icon, label, onClick, isActive }: { icon: React.ReactNode, label: string, onClick: () => void, isActive: boolean }) => (
     <button onClick={onClick} className={`flex items-center w-full px-4 py-3 text-left transition-colors duration-200 ${isActive ? 'bg-primary-dark text-white' : 'text-gray-200 hover:bg-primary-dark/50 hover:text-white'}`}>
@@ -13,39 +13,6 @@ const SidebarLink = ({ icon, label, onClick, isActive }: { icon: React.ReactNode
     </button>
 );
 
-const ManageAppointmentsView = () => {
-    const { appointments } = useAppContext();
-
-    return (
-        <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg overflow-x-auto">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">View All Appointments</h2>
-            <div className="min-w-full">
-                <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">Patient</th>
-                            <th scope="col" className="px-6 py-3">Doctor</th>
-                            <th scope="col" className="px-6 py-3">Date & Time</th>
-                            <th scope="col" className="px-6 py-3">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {appointments.map((apt, index) => (
-                            <tr key={apt.id} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                                <td className="px-6 py-4 font-medium text-gray-900">{apt.patientName}</td>
-                                <td className="px-6 py-4">{apt.doctorName}</td>
-                                <td className="px-6 py-4">{apt.date} at {apt.time}</td>
-                                <td className="px-6 py-4">{apt.status}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {appointments.length === 0 && <p className="text-center text-gray-500 py-8">No appointments found.</p>}
-            </div>
-        </div>
-    );
-};
-
 export const AdminDashboard = () => {
     const { currentUser, logout } = useAppContext();
     const [activeView, setActiveView] = useState<AdminView>('dashboard');
@@ -53,13 +20,12 @@ export const AdminDashboard = () => {
     const renderContent = () => {
         switch (activeView) {
             case 'viewStaff': return <ViewStaff />;
-            case 'manageAppointments': return <ManageAppointmentsView />;
             case 'insuranceManagement': return <InsuranceManagement />;
             case 'dashboard':
             default:
                 return (
                     <div className="p-8 bg-white rounded-lg shadow-md">
-                        <h2 className="text-3xl font-bold text-gray-800">Welcome, {currentUser?.fullName}!</h2>
+                        <h2 className="text-3xl font-bold text-gray-800">Welcome, Manager!</h2>
                         <p className="mt-2 text-gray-600">Select an option from the sidebar to view hospital information.</p>
                     </div>
                 );
@@ -75,7 +41,6 @@ export const AdminDashboard = () => {
                 <nav className="flex-1 px-2 py-4 space-y-2">
                     <SidebarLink icon={<HomeIcon />} label="Dashboard" onClick={() => setActiveView('dashboard')} isActive={activeView === 'dashboard'}/>
                     <SidebarLink icon={<UsersIcon />} label="View Staff" onClick={() => setActiveView('viewStaff')} isActive={activeView === 'viewStaff'}/>
-                    <SidebarLink icon={<CalendarIcon />} label="View Appointments" onClick={() => setActiveView('manageAppointments')} isActive={activeView === 'manageAppointments'}/>
                     <SidebarLink
                         icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>}
                         label="View Insurance Providers"

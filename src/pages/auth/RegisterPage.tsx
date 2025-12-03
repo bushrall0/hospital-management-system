@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 import { Page, Patient, Role } from '../../types';
+import api from '../../api/client';
 
 export const RegisterPage = () => {
     const { navigate, setPatients, patients } = useAppContext();
@@ -61,24 +62,14 @@ export const RegisterPage = () => {
 
         try {
             // Save to database via API
-            const response = await fetch('http://localhost:3001/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    fullName: formData.fullName,
-                    email: formData.email,
-                    password: formData.password,
-                    dateOfBirth: formData.dateOfBirth,
-                    contactNumber: formData.contactNumber,
-                }),
+            await api.auth.register({
+                fullName: formData.fullName,
+                email: formData.email,
+                password: formData.password,
+                dateOfBirth: formData.dateOfBirth,
+                contactNumber: formData.contactNumber,
+                role: Role.Patient
             });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'Registration failed');
-            }
 
             // Also save to local state for immediate UI update
             setPatients(prev => [...prev, newPatient]);

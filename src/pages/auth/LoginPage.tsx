@@ -1,19 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
-import { Page, Role } from '../../types';
 
 export const LoginPage = () => {
-    const { navigate, login, loginTargetRole, setLoginTargetRole } = useAppContext();
+    const { login } = useAppContext();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-
-    useEffect(() => {
-        // Default to Admin login if no role is specified
-        if (loginTargetRole === null) {
-            setLoginTargetRole(Role.Admin);
-        }
-    }, [loginTargetRole, setLoginTargetRole]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,24 +33,6 @@ export const LoginPage = () => {
                 {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label htmlFor="role" className="text-sm font-medium text-gray-700">Login As</label>
-                        <select
-                            id="role"
-                            value={loginTargetRole || Role.Admin}
-                            onChange={(e) => setLoginTargetRole(e.target.value as Role)}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                        >
-                            <option value={Role.Admin}>Admin</option>
-                            <option value={Role.Doctor}>Doctor</option>
-                            <option value={Role.Patient}>Patient</option>
-                            <option value={Role.LabTechnician}>Lab Technician</option>
-                            <option value={Role.Marketing}>Marketing Administrator</option>
-                            <option value={Role.Accountant}>Accountant Administrator</option>
-                            <option value={Role.CustomerService}>Customer Service</option>
-                        </select>
-                    </div>
-
                     <div>
                         <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
                         <input

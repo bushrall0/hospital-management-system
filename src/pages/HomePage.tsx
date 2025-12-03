@@ -66,7 +66,7 @@ export const HomePage = () => {
                 </section>
 
                 {/* Vision Section */}
-                <section className="py-16 bg-white">
+                <section id="about" className="py-16 bg-white">
                     <div className="container mx-auto px-6">
                         <div className="max-w-4xl mx-auto">
                             <h3 className="text-3xl font-bold text-center text-gray-800 mb-6">Our Vision</h3>
@@ -182,7 +182,7 @@ export const HomePage = () => {
                 </section>
 
                 {/* Contact Section */}
-                <section className="py-16 bg-white">
+                <section id="contact" className="py-16 bg-white">
                     <div className="container mx-auto px-6 text-center">
                         <h3 className="text-3xl font-bold text-gray-800 mb-6">Get In Touch</h3>
                         <div className="max-w-2xl mx-auto space-y-4">

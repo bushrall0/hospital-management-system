@@ -24,14 +24,9 @@ interface DbUser {
 /**
  * Authenticate user login
  */
-export async function authenticateUser(email: string, password: string, role: Role): Promise<Patient | Staff | null> {
+export async function authenticateUser(email: string, password: string, role?: Role): Promise<Patient | Staff | null> {
     try {
-        console.log('🔐 Authentication attempt:', { email, password, role });
-
-        // First, check if user exists
-        const checkUserSql = `SELECT user_id, email, password_hash, role, is_active FROM Users WHERE email = :email`;
-        const checkResult = await executeQuery<DbUser>(checkUserSql, { email });
-        console.log('🔍 User lookup result:', checkResult.rows);
+        console.log('🔐 Authentication attempt:', { email, password });
 
         const sql = `
             SELECT user_id, full_name, email, password_hash as password, role,
@@ -40,14 +35,12 @@ export async function authenticateUser(email: string, password: string, role: Ro
             FROM Users
             WHERE email = :email
               AND password_hash = :password
-              AND role = :role
               AND is_active = '1'
         `;
 
         const result = await executeQuery<DbUser>(sql, {
             email,
-            password, // In production, this should be hashed
-            role
+            password // In production, this should be hashed
         });
 
         console.log('🔍 Full query result:', { rowCount: result.rows?.length || 0, rows: result.rows });
@@ -125,7 +118,7 @@ export async function registerPatient(patient: Omit<Patient, 'id'>): Promise<Pat
 }
 
 /**
- * Get all staff members (excluding admins)
+ * Get all staff members (excluding admins and patients)
  */
 export async function getAllStaff(): Promise<Staff[]> {
     try {
@@ -133,7 +126,7 @@ export async function getAllStaff(): Promise<Staff[]> {
             SELECT user_id, full_name, email, password_hash as password, role,
                    department, phone_number as contact_number, consultation_fee
             FROM Users
-            WHERE role IN ('Doctor', 'Lab Technician')
+            WHERE role NOT IN ('Admin', 'Patient')
               AND is_active = '1'
             ORDER BY role, full_name
         `;
@@ -149,7 +142,7 @@ export async function getAllStaff(): Promise<Staff[]> {
             fullName: user.FULL_NAME,
             email: user.EMAIL,
             password: user.PASSWORD_HASH,
-            role: user.ROLE as Role.Doctor | Role.LabTechnician,
+            role: user.ROLE as Role.Doctor | Role.LabTechnician | Role.Marketing | Role.Accountant | Role.CustomerService,
             department: user.DEPARTMENT || '',
             contactNumber: user.PHONE_NUMBER || '',
             consultationFee: user.CONSULTATION_FEE || undefined

@@ -204,21 +204,6 @@ export const CustomerServiceDashboard = () => {
             </header>
 
             <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-                {/* Info Banner */}
-                <div className="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                    <div className="flex items-start">
-                        <svg className="w-6 h-6 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                            <h3 className="text-blue-800 font-semibold mb-1">Real Patient Data Connected</h3>
-                            <p className="text-blue-700 text-sm">
-                                Showing chat sessions with registered patients from the database. Messages are UI-only for demonstration.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-3 h-[700px]">
                         {/* Chat Sessions List */}

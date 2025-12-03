@@ -37,10 +37,10 @@ async function apiRequest<T>(
  * Authentication API
  */
 export const authAPI = {
-  login: async (email: string, password: string, role: string) => {
+  login: async (email: string, password: string) => {
     return apiRequest('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password, role }),
+      body: JSON.stringify({ email, password }),
     });
   },
 

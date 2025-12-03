@@ -40,8 +40,8 @@ initializePool()
  */
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
-        const { email, password, role } = req.body;
-        const user = await userService.authenticateUser(email, password, role);
+        const { email, password } = req.body;
+        const user = await userService.authenticateUser(email, password);
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });

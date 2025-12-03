@@ -85,10 +85,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
      * Login user via API
      */
     const login = async (email: string, password: string): Promise<boolean> => {
-        if (!loginTargetRole) return false;
-
         try {
-            const response: any = await api.auth.login(email, password, loginTargetRole);
+            const response: any = await api.auth.login(email, password);
 
             if (response.user) {
                 setCurrentUser(response.user);
