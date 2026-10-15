@@ -16,8 +16,8 @@ export const INITIAL_STAFF: Staff[] = [
     {
         id: 'admin_1',
         fullName: 'System Administrator',
-        email: 'bushramug9@gmail.com',
-        password: '12345678Bb@',
+        email: 'admin@healsmart.com',
+        password: 'Admin@12345',
         role: Role.Admin,
         department: 'IT Administration',
         contactNumber: '0501234567'

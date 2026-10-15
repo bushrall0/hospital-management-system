@@ -1,150 +1,114 @@
-# HealSmart Hospital Management System
+<div align="center">
 
-A comprehensive web-based Hospital Management System built with React, TypeScript, and Oracle Database.
+# 🏥 HealSmart — Hospital Management System
 
-## Features
+**A full-stack web platform that connects every hospital department (patients, doctors, labs, finance, and support) in one system.**
 
-### Patient Portal
-- Book appointments with doctors
-- View appointment history
-- Access medical records
-- View lab test results
-- Payment method management
-- Insurance verification
-- Customer service chat support
+![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white)
+![Oracle](https://img.shields.io/badge/Oracle_Database-F80000?logo=oracle&logoColor=white)
+![Scrum](https://img.shields.io/badge/Agile-Scrum-0A66C2)
 
-### Admin Dashboard
-- User management
-- Appointment oversight
-- Insurance provider management
-- System administration
+<img src="docs/screenshots/home.jpg" alt="HealSmart home page" width="850">
 
-### Doctor Dashboard
-- View scheduled appointments
-- Update appointment status
-- Add medical records for patients
-- Request lab tests
+</div>
 
-### Lab Technician Dashboard
-- View pending lab test requests
-- Upload test results
-- Manage test records
+---
 
-### Accountant Dashboard
-- View payment transactions
-- Generate financial reports
-- Monitor revenue statistics
+## Overview
 
-### Marketing Dashboard
-- Send promotional email campaigns (UI)
-- Target specific patient groups
+Hospitals often run their departments on separate systems: one for booking, another for lab results, and another for billing. **HealSmart** brings all of them into one platform. Each user role gets its own dashboard, and every action is stored in a shared **Oracle database**. When a doctor requests a lab test, it immediately appears for the lab technician, and the result then shows up in the patient's portal.
 
-### Customer Service
-- Chat support system
-- Manage patient inquiries
-- Resolve support tickets
+The system was built as a **team project** for a software development course, using the **Agile Scrum** methodology.
 
-## Technology Stack
+## Features by role
 
-- **Frontend**: React 19.2, TypeScript, Tailwind CSS
-- **Backend**: Node.js, Express.js
-- **Database**: Oracle Database 21c XE
-- **Build Tool**: Vite
+| Role | What they can do |
+|---|---|
+| 🧑 **Patient** | Register, book appointments by department, doctor, date, and time; pay with an insurance discount; view appointments, medical records, and lab results; chat with customer service |
+| 👨‍⚕️ **Doctor** | View and filter appointments, mark them complete, add medical records, request lab tests, and track their status |
+| 🧪 **Lab Technician** | View all lab requests by status (pending, in progress, completed) and upload results |
+| 🛡️ **Hospital Manager (Admin)** | Manage staff, add or remove staff accounts, and manage supported insurance providers |
+| 💰 **Accountant** | Revenue and payment statistics, a full transaction log, and CSV export |
+| 💬 **Customer Service** | Handle live patient conversations and mark them as resolved |
+| 📣 **Marketing** | Compose promotional email campaigns for targeted patient groups (UI only) |
 
-## Prerequisites
+## Screenshots
 
-- Node.js (v16 or higher)
-- Oracle Database 21c XE
-- npm or yarn
+| Hospital manager: staff | Doctor: appointments |
+|---|---|
+| ![Admin staff](docs/screenshots/admin-staff.jpg) | ![Doctor appointments](docs/screenshots/doctor-appointments.jpg) |
 
-## Installation
+| Doctor: lab requests | Lab technician dashboard |
+|---|---|
+| ![Doctor lab tests](docs/screenshots/doctor-lab-tests.jpg) | ![Lab technician](docs/screenshots/lab-technician-dashboard.jpg) |
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+| Patient: book appointment | Payment with insurance discount |
+|---|---|
+| ![Book appointment](docs/screenshots/patient-book-appointment.jpg) | ![Payment](docs/screenshots/patient-payment-insurance.jpg) |
 
-2. Set up environment variables:
-   - Copy `.env.example` to `.env.local`
-   - Update with your Oracle database credentials:
-     ```
-     DB_USER=your_database_username
-     DB_PASSWORD=your_database_password
-     DB_CONNECTION_STRING=localhost/XEPDB1
-     ```
+| Patient: my appointments | Customer service chat |
+|---|---|
+| ![Patient appointments](docs/screenshots/patient-appointments.jpg) | ![Customer service](docs/screenshots/customer-service-chat.jpg) |
 
-3. Set up the database:
-   - Follow instructions in `DATABASE_SETUP.md`
-   - Run the database migration scripts in the `src/database/migrations/` folder
+| Accountant dashboard | Marketing campaigns |
+|---|---|
+| ![Accountant](docs/screenshots/accountant-dashboard.jpg) | ![Marketing](docs/screenshots/marketing-dashboard.jpg) |
 
-4. Start the backend server:
-   ```bash
-   npm run server
-   ```
+## Architecture
 
-5. Start the frontend development server:
-   ```bash
-   npm run dev
-   ```
+```
+React + TypeScript (Vite)  ──HTTP/JSON──►  Express REST API  ──oracledb──►  Oracle Database
+   role-based dashboards                    /api/auth, /api/appointments,       7 related tables
+                                            /api/lab-tests, /api/payments …     sequences + indexes
+```
 
-6. Access the application at `http://localhost:3000`
+### Database design
 
-## Default Login Credentials
+The Oracle schema ([`src/database/schema.sql`](src/database/schema.sql)) has **7 related tables**: `Users`, `Appointments`, `Medical_Records`, `Lab_Tests`, `Prescriptions`, `Insurance`, and `Payments`. It also has **8 sequences** for auto-increment IDs and **22 indexes** to speed up the most common queries, such as looking up appointments by doctor or patient, or lab tests by status.
 
-### Admin
-- Email: admin@healsmart.com
-- Password: admin123
+## Run it locally
 
-### Doctor
-- Email: doctor@healsmart.com
-- Password: doctor123
+**Requirements:** Node.js 20+ and Oracle Database 21c XE.
 
-### Patient
-- Email: patient@healsmart.com
-- Password: patient123
+```bash
+git clone https://github.com/bushrall0/hospital-management-system.git
+cd hospital-management-system
+npm install
 
-### Lab Technician
-- Email: labtech@healsmart.com
-- Password: labtech123
+cp .env.example .env     # then fill in your Oracle user, password and connection string
+npm run db:init          # creates the tables and loads sample data
+npm run dev:all          # starts the API (port 5000) and the frontend (port 3000)
+```
 
-### Accountant
-- Email: accountant@healsmart.com
-- Password: accountant123
+Open http://localhost:3000. Sample accounts are created by [`src/database/seed.sql`](src/database/seed.sql). For example, the admin account is `admin@healsmart.com` / `Admin@12345`.
 
-### Marketing
-- Email: marketing@healsmart.com
-- Password: marketing123
+See [`DATABASE_SETUP.md`](DATABASE_SETUP.md) for a step-by-step Oracle setup guide.
 
-### Customer Service
-- Email: customerservice@healsmart.com
-- Password: customerservice123
-
-## Documentation
-
-- `DATABASE_SETUP.md` - Database setup and configuration
-- `ORACLE_DATABASE_INTEGRATION.md` - Oracle database integration guide
-
-## Project Structure
+## Project structure
 
 ```
 hospital-management-system/
+├── server/index.ts        # Express REST API
 ├── src/
-│   ├── components/       # Reusable UI components
-│   ├── contexts/         # React context providers
-│   ├── pages/           # Page components
-│   │   ├── admin/       # Admin dashboard pages
-│   │   ├── doctor/      # Doctor dashboard pages
-│   │   ├── patient/     # Patient portal pages
-│   │   ├── accountant/  # Accountant dashboard pages
-│   │   ├── marketing/   # Marketing dashboard pages
-│   │   └── customerService/ # Customer service pages
-│   ├── services/        # API service functions
-│   ├── database/        # Database connection and migrations
-│   └── types.ts         # TypeScript type definitions
-├── server/              # Express.js backend
-└── about the project/   # Project documentation
+│   ├── pages/             # Dashboards per role (patient, doctor, admin, labTechnician, accountant, …)
+│   ├── components/        # Shared UI components
+│   ├── services/          # Data access per entity (users, appointments, lab tests, payments, …)
+│   ├── database/          # Oracle connection pool, schema.sql, seed.sql, migrations
+│   └── api/client.ts      # Frontend API client
+└── docs/screenshots/
 ```
 
-## License
+## Team & my role
 
-This project is for educational purposes.
+This was a team project built with Agile Scrum.
+
+**Bushra Almughirah: UI/UX design & database design**
+- Designed the user interface and user experience of the role-based dashboards
+- Designed the Oracle database: tables, relationships, sequences, indexes, and sample data
+
+> This is an educational project. Passwords are stored in plain text for demo purposes only, so do not use real credentials.

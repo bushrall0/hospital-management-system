@@ -11,10 +11,10 @@
 -- ============================================================
 
 -- Admin User (ONLY ONE - Created by IT Department)
--- Username: bushramug9@gmail.com
--- Password: 12345678Bb@
+-- Username: admin@healsmart.com
+-- Password: Admin@12345
 INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, is_active)
-VALUES (user_seq.NEXTVAL, 'System Administrator', 'bushramug9@gmail.com', '12345678Bb@', 'Admin', '0501234567', '1');
+VALUES (user_seq.NEXTVAL, 'System Administrator', 'admin@healsmart.com', 'Admin@12345', 'Admin', '0501234567', '1');
 
 -- Doctors
 INSERT INTO Users (user_id, full_name, email, password_hash, role, phone_number, department, specialization, license_number, hire_date, consultation_fee, is_active)
