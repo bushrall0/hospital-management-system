@@ -9,7 +9,7 @@
 
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { getConnection, initializePool, closePool } from './connection.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -108,7 +108,7 @@ export async function initializeDatabase(): Promise<void> {
 }
 
 // Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   initializeDatabase()
     .then(() => {
       console.log('\n✨ All done! You can now start the application.');

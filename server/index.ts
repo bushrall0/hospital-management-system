@@ -5,6 +5,8 @@
 
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initializePool, closePool } from '../src/database/connection';
 
 // Import service modules
@@ -435,6 +437,13 @@ app.post('/api/payments', async (req: Request, res: Response) => {
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'OK', message: 'HealSmart API Server is running' });
+});
+
+// Serve the built React frontend (npm run build) in production
+const distDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
+app.use(express.static(distDir));
+app.get(/^\/(?!api\/).*/, (req: Request, res: Response) => {
+    res.sendFile(path.join(distDir, 'index.html'));
 });
 
 // Start server

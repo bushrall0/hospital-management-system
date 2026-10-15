@@ -26,7 +26,7 @@ interface DbUser {
  */
 export async function authenticateUser(email: string, password: string, role?: Role): Promise<Patient | Staff | null> {
     try {
-        console.log('🔐 Authentication attempt:', { email, password });
+        console.log('🔐 Authentication attempt:', { email });
 
         const sql = `
             SELECT user_id, full_name, email, password_hash as password, role,
