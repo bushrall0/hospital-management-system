@@ -23,6 +23,11 @@ export async function initializePool(): Promise<void> {
       poolMin: dbConfig.poolMin,
       poolMax: dbConfig.poolMax,
       poolIncrement: dbConfig.poolIncrement,
+      ...(dbConfig.walletDir && {
+        configDir: dbConfig.walletDir,
+        walletLocation: dbConfig.walletDir,
+        walletPassword: dbConfig.walletPassword,
+      }),
     });
 
     console.log('✅ Oracle Database Connection Pool initialized successfully');
